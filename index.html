@@ -179,7 +179,7 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
   </div>
 
   <!-- Download -->
-  <button class="btn-download" id="dlBtn" onclick="downloadBanner()" disabled>⬇ Tải PNG về máy</button>
+  <button class="btn-download" id="dlBtn" onclick="downloadBanner()" disabled>⬇ Tải ảnh về</button>
 
 </div>
 
@@ -482,13 +482,15 @@ function drawText() {
 }
 
 // ── DOWNLOAD ────────────────────────────────────────────────
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
 async function downloadBanner() {
   const loading = document.getElementById('loading');
   loading.classList.add('show');
   hideHints();
   await new Promise(r => setTimeout(r, 50));
 
-  // Redraw clean (no hints)
+  // Redraw clean
   ctx.clearRect(0, 0, W, H);
   if (avatarImage && avatarImage.complete) {
     ctx.save();
@@ -501,10 +503,33 @@ async function downloadBanner() {
   if (currentName) drawText();
 
   loading.classList.remove('show');
-  const link = document.createElement('a');
-  link.download = 'thu-moi-ncc-club.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+
+  if (isIOS) {
+    // iOS Safari không cho download trực tiếp vào Ảnh
+    // → mở ảnh tab mới, hướng dẫn người dùng giữ ngón tay để lưu
+    const dataUrl = canvas.toDataURL('image/png');
+    const w = window.open('', '_blank');
+    w.document.write(`
+      <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+      <style>
+        body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;font-family:sans-serif;}
+        img{width:100%;max-width:600px;display:block;}
+        .tip{color:#f0d080;font-size:14px;text-align:center;padding:14px 20px;line-height:1.7;background:#1a1a1a;width:100%;max-width:600px;}
+      </style></head>
+      <body>
+        <div class="tip">👇 <b>Giữ ngón tay vào ảnh</b> → chọn <b>"Thêm vào Ảnh"</b> để lưu vào thư viện</div>
+        <img src="${dataUrl}">
+      </body></html>
+    `);
+    w.document.close();
+  } else {
+    // Android / Desktop → download bình thường
+    const link = document.createElement('a');
+    link.download = 'thu-moi-ncc-club.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
   showHints();
 }
 
@@ -522,6 +547,11 @@ window.addEventListener('load', async () => {
   draw();
   positionHints();
   showHints();
+
+  // Đổi label nút theo thiết bị
+  if (isIOS) {
+    document.getElementById('dlBtn').textContent = '🖼 Xem & Lưu vào Ảnh';
+  }
 });
 </script>
 </body>
