@@ -467,15 +467,12 @@ function draw() {
 }
 
 function drawText() {
-  const FONT = `${FONT_SIZE}px 'MillerBanner','Playfair Display',serif`;
+  const FONT = `bold ${FONT_SIZE}px 'MillerBanner','Playfair Display',serif`;
   const text = `Kính gửi: ${currentName}`;
   ctx.save();
   ctx.textAlign = 'center';
   ctx.font = FONT;
-  const tw = ctx.measureText(text).width;
-  const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
-  grad.addColorStop(0, '#f5e090'); grad.addColorStop(0.5, '#c9a84c'); grad.addColorStop(1, '#f5e090');
-  ctx.fillStyle = grad;
+  ctx.fillStyle = '#ebe6b4';
   ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
   ctx.fillText(text, NAME_X, NAME_Y);
   ctx.restore();
