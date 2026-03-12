@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tạo Thư Mời – Gala Dinner GM Authentic</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --gold:#c9a84c; --gold-light:#f0d080; --panel:#1a1a1a; --border:#2e2e2e; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#111; color:#e8e0d0; font-family:'Be Vietnam Pro',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 16px 60px; }
+  header { text-align:center; margin-bottom:36px; }
+  header h1 { font-family:'Playfair Display',serif; font-size:26px; color:var(--gold-light); letter-spacing:1px; }
+  header p { font-size:13px; color:#666; margin-top:6px; }
+  .layout { display:flex; gap:32px; align-items:flex-start; width:100%; max-width:1150px; flex-wrap:wrap; justify-content:center; }
+
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:320px; flex-shrink:0; }
+  .panel h2 { font-family:'Playfair Display',serif; font-size:15px; color:var(--gold); margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+  .field { margin-bottom:18px; }
+  .field > label { display:block; font-size:11px; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
+  .field input[type="text"] { width:100%; background:#111; border:1px solid var(--border); border-radius:8px; color:#e8e0d0; font-family:'Be Vietnam Pro',sans-serif; font-size:14px; padding:10px 14px; outline:none; transition:border-color .2s; }
+  .field input[type="text"]:focus { border-color:var(--gold); }
+
+  .avatar-upload input[type="file"] { display:none; }
+  .avatar-btn { display:flex; align-items:center; gap:12px; background:#111; border:1px dashed var(--border); border-radius:10px; padding:14px; cursor:pointer; transition:border-color .2s,background .2s; width:100%; }
+  .avatar-btn:hover { border-color:var(--gold); background:#161616; }
+  .avatar-preview { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--gold); flex-shrink:0; background:#222; }
+  .avatar-btn-text { font-size:13px; color:#aaa; line-height:1.5; }
+  .avatar-btn-text strong { color:var(--gold-light); display:block; font-size:14px; }
+
+  .zoom-row { display:flex; align-items:center; gap:10px; margin-top:12px; }
+  .zoom-row span { font-size:12px; color:#666; white-space:nowrap; }
+  .zoom-row input[type="range"] { flex:1; accent-color:var(--gold); cursor:pointer; }
+
+  .divider { border:none; border-top:1px solid var(--border); margin:18px 0; }
+
+  .hint-box { background:#161616; border:1px solid #252525; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:12px; color:#666; line-height:1.8; }
+  .hint-box b { color:var(--gold); }
+
+  .btn-generate { width:100%; background:linear-gradient(135deg,#c9a84c,#f0d080,#c9a84c); background-size:200%; border:none; border-radius:10px; color:#111; font-family:'Be Vietnam Pro',sans-serif; font-size:14px; font-weight:700; padding:13px; cursor:pointer; letter-spacing:.5px; animation:shimmer 3s ease infinite; transition:transform .15s,box-shadow .15s; margin-bottom:10px; }
+  .btn-generate:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(201,168,76,.35); }
+  @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+  .btn-download { width:100%; background:transparent; border:1px solid var(--gold); border-radius:10px; color:var(--gold-light); font-family:'Be Vietnam Pro',sans-serif; font-size:14px; font-weight:600; padding:12px; cursor:pointer; transition:background .2s,color .2s; }
+  .btn-download:hover { background:var(--gold); color:#111; }
+  .btn-download:disabled { opacity:.35; cursor:default; }
+
+  .canvas-wrap { flex:1; min-width:280px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .canvas-label { font-size:11px; color:#444; text-transform:uppercase; letter-spacing:1px; }
+  #bannerCanvas { display:block; max-width:100%; border-radius:12px; box-shadow:0 8px 48px rgba(0,0,0,.8); cursor:grab; touch-action:none; }
+  #bannerCanvas:active { cursor:grabbing; }
+
+  #loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:999; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+  #loading.show { display:flex; }
+  .spinner { width:44px; height:44px; border:3px solid #333; border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✉ Tạo Thư Mời Cá Nhân Hoá</h1>
+  <p>Gala Dinner – Kỷ Niệm 1 Năm CLB GM Authentic</p>
+</header>
+
+<div class="layout">
+  <div class="panel">
+    <h2>⚙ Tuỳ Chỉnh</h2>
+
+    <div class="field">
+      <label>Ảnh đại diện</label>
+      <div class="avatar-upload">
+        <label class="avatar-btn" for="avatarInput">
+          <img id="avatarPreview" class="avatar-preview"
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52'%3E%3Ccircle cx='26' cy='26' r='26' fill='%23222'/%3E%3Ccircle cx='26' cy='20' r='9' fill='%23444'/%3E%3Cellipse cx='26' cy='44' rx='15' ry='10' fill='%23444'/%3E%3C/svg%3E">
+          <div class="avatar-btn-text">
+            <strong>Chọn ảnh</strong>
+            JPG hoặc PNG
+          </div>
+        </label>
+        <input type="file" id="avatarInput" accept="image/*">
+      </div>
+      <div class="zoom-row">
+        <span>🔍 Zoom</span>
+        <input type="range" id="zoomSlider" min="0.3" max="4" step="0.01" value="1">
+        <span id="zoomVal">100%</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Kính gửi (tên người nhận)</label>
+      <input type="text" id="nameInput" value="Gia đình Anh Hoàng - Chị Đại," placeholder="VD: Anh Minh - Chị Lan,">
+    </div>
+
+    <hr class="divider">
+
+    <div class="hint-box">
+      <b>Căn chỉnh ảnh:</b><br>
+      • <b>Kéo</b> ảnh trong khung tròn để di chuyển<br>
+      • <b>Thanh Zoom</b> để phóng to / thu nhỏ<br>
+      • <b>Cuộn chuột</b> trên ảnh để zoom nhanh<br>
+      • Tên thay đổi <b>ngay lập tức</b> khi gõ
+    </div>
+
+    <button class="btn-generate" onclick="renderFinal()">🎨 Xuất Thư Mời</button>
+    <button class="btn-download" id="dlBtn" onclick="downloadBanner()" disabled>⬇ Tải PNG về máy</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <span class="canvas-label">Kéo ảnh để căn chỉnh · Xem trước trực tiếp</span>
+    <canvas id="bannerCanvas" width="900" height="1200"></canvas>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span style="color:#c9a84c;font-size:14px;">Đang xuất thư mời...</span>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+// Tên file ảnh nền (PNG đã xoá mặt, khung tròn trong suốt)
+const BANNER_SRC = 'banner-bg.png';
+
+// Vị trí khung tròn trên canvas 900×1200 (tỷ lệ so với W và H)
+const CX_RATIO = 0.500;   // tâm X
+const CY_RATIO = 0.432;   // tâm Y
+const CR_RATIO = 0.195;   // bán kính
+
+// Vị trí dòng "Kính gửi" (tỷ lệ so với H)
+const NAME_Y_RATIO = 0.319;
+
+// ── STATE ───────────────────────────────────────────────────────
+let bgImage = null;
+let avatarImage = null;
+let avZoom = 1;
+let avOffX = 0, avOffY = 0;
+let dragging = false;
+let dragSX = 0, dragSY = 0, dragSOX = 0, dragSOY = 0;
+
+const canvas = document.getElementById('bannerCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const CX = W * CX_RATIO, CY = H * CY_RATIO, CR = W * CR_RATIO;
+const NAME_Y = H * NAME_Y_RATIO;
+
+// ── LOAD BG ─────────────────────────────────────────────────────
+function loadBg() {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => { bgImage = img; resolve(); };
+    img.onerror = () => { console.warn('Không tìm thấy banner-bg.png'); resolve(); };
+    img.src = BANNER_SRC;
+  });
+}
+
+// ── AVATAR ──────────────────────────────────────────────────────
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('avatarPreview').src = url;
+  const img = new Image();
+  img.onload = () => {
+    avatarImage = img;
+    // Auto-fit: scale so shorter side = diameter
+    const minSide = Math.min(img.naturalWidth, img.naturalHeight);
+    avZoom = (CR * 2) / minSide;
+    avOffX = 0; avOffY = 0;
+    document.getElementById('zoomSlider').value = avZoom;
+    updateZoomLabel();
+    draw();
+  };
+  img.src = url;
+});
+
+// ── ZOOM ────────────────────────────────────────────────────────
+document.getElementById('zoomSlider').addEventListener('input', function() {
+  avZoom = parseFloat(this.value);
+  updateZoomLabel();
+  draw();
+});
+function updateZoomLabel() {
+  document.getElementById('zoomVal').textContent = Math.round(avZoom * 100) + '%';
+}
+
+// ── DRAG ────────────────────────────────────────────────────────
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = W / rect.width, sy = H / rect.height;
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - rect.left) * sx, y: (src.clientY - rect.top) * sy };
+}
+function inCircle(x, y) { return Math.hypot(x - CX, y - CY) <= CR + 10; }
+
+canvas.addEventListener('mousedown', e => {
+  if (!avatarImage) return;
+  const p = getPos(e);
+  if (!inCircle(p.x, p.y)) return;
+  dragging = true; dragSX = p.x; dragSY = p.y; dragSOX = avOffX; dragSOY = avOffY;
+});
+canvas.addEventListener('touchstart', e => {
+  if (!avatarImage) return;
+  const p = getPos(e);
+  if (!inCircle(p.x, p.y)) return;
+  dragging = true; dragSX = p.x; dragSY = p.y; dragSOX = avOffX; dragSOY = avOffY;
+}, { passive: true });
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const p = getPos(e);
+  avOffX = dragSOX + (p.x - dragSX);
+  avOffY = dragSOY + (p.y - dragSY);
+  draw();
+});
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  const p = getPos(e);
+  avOffX = dragSOX + (p.x - dragSX);
+  avOffY = dragSOY + (p.y - dragSY);
+  draw();
+}, { passive: true });
+
+window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('touchend', () => dragging = false);
+
+// Scroll zoom
+canvas.addEventListener('wheel', e => {
+  if (!avatarImage) return;
+  const p = getPos(e);
+  if (!inCircle(p.x, p.y)) return;
+  e.preventDefault();
+  avZoom = Math.min(4, Math.max(0.3, avZoom - e.deltaY * 0.0015));
+  document.getElementById('zoomSlider').value = avZoom;
+  updateZoomLabel();
+  draw();
+}, { passive: false });
+
+// ── DRAW ────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. Avatar in circle
+  if (avatarImage && avatarImage.complete && avatarImage.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, CR, 0, Math.PI * 2);
+    ctx.clip();
+    const dw = avatarImage.naturalWidth * avZoom;
+    const dh = avatarImage.naturalHeight * avZoom;
+    ctx.drawImage(avatarImage, CX - dw / 2 + avOffX, CY - dh / 2 + avOffY, dw, dh);
+    ctx.restore();
+  }
+
+  // 2. Banner overlay PNG (transparent at circle = shows avatar through)
+  if (bgImage) {
+    ctx.drawImage(bgImage, 0, 0, W, H);
+  } else {
+    // fallback: draw placeholder circle ring if no bg loaded
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, CR + 6, 0, Math.PI * 2);
+    const g = ctx.createLinearGradient(CX-CR, CY-CR, CX+CR, CY+CR);
+    g.addColorStop(0, '#f0d080'); g.addColorStop(0.5, '#c9a84c'); g.addColorStop(1, '#8a5e10');
+    ctx.strokeStyle = g; ctx.lineWidth = 8; ctx.stroke();
+    ctx.restore();
+  }
+
+  // 3. Name text – draw on top
+  drawName();
+}
+
+function drawName() {
+  const raw = document.getElementById('nameInput').value.trim();
+  const name = raw || 'Quý Anh/Chị,';
+  const fontSize = Math.round(W * 0.033);
+
+  // Cover original baked-in name with a dark strip (if bg is JPG not transparent)
+  // Skip if PNG with transparent text area – adjust alpha as needed
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,8,8,0.88)';
+  ctx.fillRect(W * 0.04, NAME_Y - fontSize * 1.1, W * 0.92, fontSize * 2.2);
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = `500 ${fontSize}px 'Be Vietnam Pro', sans-serif`;
+  ctx.fillStyle = '#f0ece0';
+  ctx.shadowColor = 'rgba(0,0,0,0.95)';
+  ctx.shadowBlur = 12;
+  ctx.fillText(`Kính gửi: ${name}`, W * 0.5, NAME_Y + fontSize * 0.38);
+  ctx.restore();
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────
+async function renderFinal() {
+  const loading = document.getElementById('loading');
+  loading.classList.add('show');
+  await new Promise(r => setTimeout(r, 40));
+  draw();
+  loading.classList.remove('show');
+  document.getElementById('dlBtn').disabled = false;
+}
+
+function downloadBanner() {
+  draw();
+  setTimeout(() => {
+    const link = document.createElement('a');
+    link.download = 'thu-moi-gala-dinner.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }, 50);
+}
+
+// ── INIT ────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  document.getElementById('nameInput').addEventListener('input', draw);
+  await loadBg();
+  draw();
+});
+</script>
+</body>
+</html>
