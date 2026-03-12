@@ -17,9 +17,9 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
 
 /* Wrapper */
 .wrap {
-  width:100%; max-width:480px;
+  width:100%; max-width:680px;
   display:flex; flex-direction:column; align-items:center;
-  padding:16px 12px 32px;
+  padding:24px 20px 40px;
   gap:14px;
 }
 
@@ -40,7 +40,7 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
 /* Tap hints that appear on canvas */
 .tap-hint {
   position:absolute;
-  pointer-events:none;
+  pointer-events:none; /* NEVER block touch/mouse */
   display:flex; align-items:center; justify-content:center;
   opacity:0;
   transition:opacity .3s;
@@ -51,7 +51,6 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
   font-family:'Be Vietnam Pro',sans-serif;
   font-size:12px; font-weight:600;
   text-align:center; line-height:1.4;
-  /* positioned via JS */
 }
 .tap-hint.visible { opacity:1; }
 
@@ -117,6 +116,20 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
 .zoom-bar span { font-size:13px; color:#666; white-space:nowrap; }
 .zoom-bar span b { color:var(--gold); }
 .zoom-bar input[type=range] { flex:1; accent-color:var(--gold); height:20px; cursor:pointer; }
+.btn-change-photo {
+  background: rgba(201,168,76,.15);
+  border: 1px solid rgba(201,168,76,.4);
+  border-radius: 8px;
+  color: var(--gold-light);
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px; font-weight: 600;
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-change-photo:active { background: rgba(201,168,76,.3); }
 
 /* Download button */
 .btn-download {
@@ -157,9 +170,9 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
   <!-- Hidden file input -->
   <input type="file" id="avatarInput" accept="image/*">
 
-  <!-- Zoom (shows after photo chosen) -->
+  <!-- Zoom + đổi ảnh (shows after photo chosen) -->
   <div class="zoom-bar" id="zoomBar">
-    <span>🔍</span>
+    <button class="btn-change-photo" onclick="document.getElementById('avatarInput').click()">📷 Đổi ảnh</button>
     <input type="range" id="zoomSlider" min="0.3" max="4" step="0.01" value="1">
     <span><b id="zoomVal">100%</b></span>
   </div>
@@ -192,7 +205,7 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
 const BANNER_SRC    = 'banner-bg.png';
 const CX_R = 0.500, CY_R = 0.432, CR_R = 0.195;
 const NAME_X_R = 0.5, NAME_Y_R = 0.268;
-const FONT_SIZE = 30; // fixed font size
+const FONT_SIZE = 36; // fixed font size
 
 // ── STATE ───────────────────────────────────────────────────
 let bgImage = null, avatarImage = null;
@@ -232,11 +245,17 @@ function positionHints() {
 
 function showHints() {
   if (!avatarImage) document.getElementById('hintAvatar').classList.add('visible');
-  if (!currentName) document.getElementById('hintText').classList.add('visible');
+  // chỉ show text hint khi chưa có tên VÀ chưa có ảnh (tránh rối)
+  if (!currentName && !avatarImage) document.getElementById('hintText').classList.add('visible');
 }
 function hideHints() {
   document.getElementById('hintAvatar').classList.remove('visible');
   document.getElementById('hintText').classList.remove('visible');
+}
+function hideAvatarHint() {
+  // Ẩn vĩnh viễn hint avatar sau khi đã chọn ảnh
+  document.getElementById('hintAvatar').classList.remove('visible');
+  document.getElementById('hintAvatar').style.display = 'none';
 }
 
 window.addEventListener('resize', positionHints);
@@ -274,7 +293,7 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
     document.getElementById('zoomSlider').value = avZoom;
     updateZoomLabel();
     document.getElementById('zoomBar').classList.add('visible');
-    document.getElementById('hintAvatar').classList.remove('visible');
+    hideAvatarHint(); // ẩn vĩnh viễn, không bao giờ show lại
     draw();
   };
   img.src = url;
@@ -340,6 +359,8 @@ function onPointerDown(e) {
   if (!avatarImage || !inCircle(p.x, p.y)) return;
   dragMode = null; tappedCircle = true;
   dragSX = p.x; dragSY = p.y; dragSAX = avOffX; dragSAY = avOffY;
+  // Ẩn hint text khi đang thao tác để không bị rối
+  document.getElementById('hintText').classList.remove('visible');
 }
 
 window.addEventListener('mousemove', onPointerMove);
@@ -402,14 +423,22 @@ function draw() {
   // 3. Name text
   if (currentName) {
     const FONT = `${FONT_SIZE}px 'MillerBanner','Playfair Display',serif`;
+    const text = `Kính gửi: ${currentName}`;
     ctx.save();
     ctx.textAlign = 'center';
     ctx.font = FONT;
-    const grad = ctx.createLinearGradient(NAME_X - 200, NAME_Y, NAME_X + 200, NAME_Y);
-    grad.addColorStop(0, '#f5e090'); grad.addColorStop(0.5, '#c9a84c'); grad.addColorStop(1, '#f5e090');
+    const tw = ctx.measureText(text).width;
+    // Shadow layers for depth
+    ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
+    // Thin dark stroke for contrast
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = 4;
+    ctx.strokeText(text, NAME_X, NAME_Y);
+    // Gold fill
+    const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
+    grad.addColorStop(0, '#fff0a0'); grad.addColorStop(0.4, '#f0d060'); grad.addColorStop(0.6, '#c9a84c'); grad.addColorStop(1, '#fff0a0');
     ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
-    ctx.fillText(`Kính gửi: ${currentName}`, NAME_X, NAME_Y);
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.fillText(text, NAME_X, NAME_Y);
     ctx.restore();
   }
 
@@ -435,13 +464,17 @@ async function downloadBanner() {
   if (bgImage) ctx.drawImage(bgImage, 0, 0, W, H);
   if (currentName) {
     const FONT = `${FONT_SIZE}px 'MillerBanner','Playfair Display',serif`;
+    const text = `Kính gửi: ${currentName}`;
     ctx.save();
     ctx.textAlign = 'center'; ctx.font = FONT;
-    const grad = ctx.createLinearGradient(NAME_X-200, NAME_Y, NAME_X+200, NAME_Y);
-    grad.addColorStop(0,'#f5e090'); grad.addColorStop(0.5,'#c9a84c'); grad.addColorStop(1,'#f5e090');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
-    ctx.fillText(`Kính gửi: ${currentName}`, NAME_X, NAME_Y);
+    const tw = ctx.measureText(text).width;
+    ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = 4;
+    ctx.strokeText(text, NAME_X, NAME_Y);
+    const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
+    grad.addColorStop(0,'#fff0a0'); grad.addColorStop(0.4,'#f0d060'); grad.addColorStop(0.6,'#c9a84c'); grad.addColorStop(1,'#fff0a0');
+    ctx.fillStyle = grad; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.fillText(text, NAME_X, NAME_Y);
     ctx.restore();
   }
 
