@@ -205,7 +205,7 @@ html,body { background:#0f0f0f; display:flex; flex-direction:column; align-items
 const BANNER_SRC    = 'banner-bg.png';
 const CX_R = 0.500, CY_R = 0.432, CR_R = 0.195;
 const NAME_X_R = 0.5, NAME_Y_R = 0.268;
-const FONT_SIZE = 36; // fixed font size
+const FONT_SIZE = 30; // fixed font size
 
 // ── STATE ───────────────────────────────────────────────────
 let bgImage = null, avatarImage = null;
@@ -428,16 +428,10 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.font = FONT;
     const tw = ctx.measureText(text).width;
-    // Shadow layers for depth
-    ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
-    // Thin dark stroke for contrast
-    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = 4;
-    ctx.strokeText(text, NAME_X, NAME_Y);
-    // Gold fill
     const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
-    grad.addColorStop(0, '#fff0a0'); grad.addColorStop(0.4, '#f0d060'); grad.addColorStop(0.6, '#c9a84c'); grad.addColorStop(1, '#fff0a0');
+    grad.addColorStop(0, '#f5e090'); grad.addColorStop(0.5, '#c9a84c'); grad.addColorStop(1, '#f5e090');
     ctx.fillStyle = grad;
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
     ctx.fillText(text, NAME_X, NAME_Y);
     ctx.restore();
   }
@@ -468,12 +462,10 @@ async function downloadBanner() {
     ctx.save();
     ctx.textAlign = 'center'; ctx.font = FONT;
     const tw = ctx.measureText(text).width;
-    ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
-    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = 4;
-    ctx.strokeText(text, NAME_X, NAME_Y);
     const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
-    grad.addColorStop(0,'#fff0a0'); grad.addColorStop(0.4,'#f0d060'); grad.addColorStop(0.6,'#c9a84c'); grad.addColorStop(1,'#fff0a0');
-    ctx.fillStyle = grad; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    grad.addColorStop(0,'#f5e090'); grad.addColorStop(0.5,'#c9a84c'); grad.addColorStop(1,'#f5e090');
+    ctx.fillStyle = grad;
+    ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
     ctx.fillText(text, NAME_X, NAME_Y);
     ctx.restore();
   }
