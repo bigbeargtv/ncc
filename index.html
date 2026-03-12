@@ -432,41 +432,11 @@ function drawText() {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.font = FONT;
-  const tm = ctx.measureText(text);
-  const tw = tm.width;
-  const th = FONT_SIZE;
-
-  // ── Drop Shadow (Multiply, opacity 66%, angle 33°, distance 6px, size 0) ──
-  // angle 33° → dx = cos(33°)*6 ≈ 5.03, dy = sin(33°)*6 ≈ 3.27 (PTS Y trục ngược)
-  const shadowAngleRad = (33 * Math.PI) / 180;
-  const shadowDist = 6;
-  const shadowDX = Math.cos(shadowAngleRad) * shadowDist;
-  const shadowDY = Math.sin(shadowAngleRad) * shadowDist; // canvas Y+ = xuống
-  // Vẽ bóng trước (Multiply ~= đen opacity 66%)
-  ctx.save();
-  ctx.globalAlpha = 0.66;
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = '#000000';
-  ctx.fillText(text, NAME_X + shadowDX, NAME_Y + shadowDY);
-  ctx.restore();
-
-  // ── Gradient Overlay (Linear, angle 90° = top→bottom, scale 150%) ──
-  // Gradient PTS: vàng đậm (#c9a840) dưới → vàng nhạt/trắng (#fff5c0) trên
-  // angle 90° trong PTS = từ dưới lên trên (ngược canvas)
-  // scale 150% → gradient trải dài hơn chiều cao chữ
-  const scaleF = 1.5;
-  const gradH = th * scaleF;
-  const gradTop    = NAME_Y - th * 0.85 - (gradH - th) / 2;
-  const gradBottom = gradTop + gradH;
-  const grad = ctx.createLinearGradient(NAME_X, gradBottom, NAME_X, gradTop);
-  // Màu từ ảnh preview: dưới vàng đậm → trên vàng nhạt gần trắng
-  grad.addColorStop(0,   '#b8860b'); // vàng đậm (dưới)
-  grad.addColorStop(0.4, '#c9a84c'); // vàng mid
-  grad.addColorStop(0.75,'#f0d060'); // vàng sáng
-  grad.addColorStop(1,   '#fff8c0'); // vàng nhạt gần trắng (trên)
-
-  ctx.globalCompositeOperation = 'source-over';
+  const tw = ctx.measureText(text).width;
+  const grad = ctx.createLinearGradient(NAME_X - tw/2, NAME_Y, NAME_X + tw/2, NAME_Y);
+  grad.addColorStop(0, '#f5e090'); grad.addColorStop(0.5, '#c9a84c'); grad.addColorStop(1, '#f5e090');
   ctx.fillStyle = grad;
+  ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 10;
   ctx.fillText(text, NAME_X, NAME_Y);
   ctx.restore();
 }
